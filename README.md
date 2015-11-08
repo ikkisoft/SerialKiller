@@ -49,18 +49,18 @@ Example of *serialkiller.conf*
 <config>
     <refresh>6000</refresh>
     <blacklist>
-	<!-- ysoserial's CommonsCollections1 payload  -->
-	<regexp>^org\.apache\.commons\.collections\.functors\.InvokerTransformer$</regexp>	
-	<!-- ysoserial's CommonsCollections2 payload  -->
-	<regexp>^org\.apache\.commons\.collections4\.functors\.InvokerTransformer$</regexp>
-	<!-- ysoserial's Groovy payload  -->
-	<regexp>^org\.codehaus\.groovy\.runtime\.ConvertedClosure$</regexp>
-	<regexp>^org\.codehaus\.groovy\.runtime\.MethodClosure$</regexp>
-	<!-- ysoserial's Spring1 payload  -->
-	<regexp>^org\.springframework\.beans\.factory\.ObjectFactory$</regexp>	
+      <!-- ysoserial's CommonsCollections1 payload  -->
+      <regexp>^org\.apache\.commons\.collections\.functors\.InvokerTransformer$</regexp>	
+      <!-- ysoserial's CommonsCollections2 payload  -->
+      <regexp>^org\.apache\.commons\.collections4\.functors\.InvokerTransformer$</regexp>
+      <!-- ysoserial's Groovy payload  -->
+      <regexp>^org\.codehaus\.groovy\.runtime\.ConvertedClosure$</regexp>
+      <regexp>^org\.codehaus\.groovy\.runtime\.MethodClosure$</regexp>
+      <!-- ysoserial's Spring1 payload  -->
+      <regexp>^org\.springframework\.beans\.factory\.ObjectFactory$</regexp>	
     </blacklist>
     <whitelist>
-        <regexp>.*</regexp>
+      <regexp>.*</regexp>
     </whitelist>
 </config>
 ```
