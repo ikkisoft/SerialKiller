@@ -7,7 +7,7 @@ When Java serialization is used to exchange information between a client and a s
 ![SerialKiller in action](http://i.imgur.com/wgoF62D.png "SerialKiller in action")
 
 > **Disclaimer:** 
-> This library may not be 100% production ready. Use at your own risk!
+> This library may not be 100% production ready yet. Use at your own risk!
 
 ### How to protect your application with SerialKiller
 1. Download the latest version of the [SerialKiller's Jar](https://github.com/ikkisoft/SerialKiller/releases/)
@@ -71,6 +71,9 @@ Example of *serialkiller.conf*
  - Ironically, SerialKiller uses some [Apache Commons](https://commons.apache.org/) libraries (configuration, logging, lang, collections)
  - Thanks to [@frohoff](twitter.com/frohoff) and [@gebl](twitter.com/gebl) for their work on unsafe Java object deserialization payloads
  - [Pierre Ernst](http://www.ibm.com/developerworks/library/se-lookahead/#authorN10032) for the original idea around look-ahead java deserialization filters
+
+### License
+This library has been dual-licensed to Apache License, Version 2.0 and GNU General Public License.
 
 ### Contributing
  - If you've discovered a bug, please open an [issue in Github](https://github.com/ikkisoft/SerialKiller/issues).
