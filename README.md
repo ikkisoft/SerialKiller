@@ -50,16 +50,16 @@ Example of *serialkiller.conf*
     <refresh>6000</refresh>
     <blacklist>
       <!-- ysoserial's CommonsCollections1 payload  -->
-      <regexp>^org\.apache\.commons\.collections\.functors\.InvokerTransformer$</regexp>	
-      <regexp>^org\.apache\.commons\.collections\.functors\.InstantiateTransformer$</regexp>	
+      <regexp>org\.apache\.commons\.collections\.functors\.InvokerTransformer$</regexp>	
+      <regexp>org\.apache\.commons\.collections\.functors\.InstantiateTransformer$</regexp>	
       <!-- ysoserial's CommonsCollections2 payload  -->
-      <regexp>^org\.apache\.commons\.collections4\.functors\.InvokerTransformer$</regexp>
-      <regexp>^org\.apache\.commons\.collections4\.functors\.InstantiateTransformer$</regexp>
+      <regexp>org\.apache\.commons\.collections4\.functors\.InvokerTransformer$</regexp>
+      <regexp>org\.apache\.commons\.collections4\.functors\.InstantiateTransformer$</regexp>
       <!-- ysoserial's Groovy payload  -->
-      <regexp>^org\.codehaus\.groovy\.runtime\.ConvertedClosure$</regexp>
-      <regexp>^org\.codehaus\.groovy\.runtime\.MethodClosure$</regexp>
+      <regexp>org\.codehaus\.groovy\.runtime\.ConvertedClosure$</regexp>
+      <regexp>org\.codehaus\.groovy\.runtime\.MethodClosure$</regexp>
       <!-- ysoserial's Spring1 payload  -->
-      <regexp>^org\.springframework\.beans\.factory\.ObjectFactory$</regexp>	
+      <regexp>org\.springframework\.beans\.factory\.ObjectFactory$</regexp>	
     </blacklist>
     <whitelist>
       <regexp>.*</regexp>
