@@ -69,7 +69,7 @@ Example of *serialkiller.conf*
 
 ### Credits
  - Ironically, SerialKiller uses some [Apache Commons](https://commons.apache.org/) libraries (configuration, logging, lang, collections)
- - Thanks to [@frohoff](twitter.com/frohoff) and [@gebl](twitter.com/gebl) for their work on unsafe Java object deserialization payloads
+ - Thanks to [@frohoff](https://twitter.com/frohoff) and [@gebl](https://twitter.com/gebl) for their work on unsafe Java object deserialization payloads
  - [Pierre Ernst](http://www.ibm.com/developerworks/library/se-lookahead/#authorN10032) for the original idea around look-ahead java deserialization filters
 
 ### License
