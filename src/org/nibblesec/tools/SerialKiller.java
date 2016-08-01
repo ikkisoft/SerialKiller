@@ -1,12 +1,13 @@
 /*
  * SerialKiller.java
  *
- * Copyright (c) 2015 Luca Carettoni
+ * Copyright (c) 2015-2016 Luca Carettoni
  *
  * Easy to use library to secure Java deserialization from untrusted input.
  *
  * Dual-Licensed Software:
- *   [Apache V2.0]
+ *
+ * [Apache V2.0]
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the LICENSE file
  * distributed with this work for additional information
@@ -21,7 +22,8 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *   [GPL V2.0]
+ *
+ * [GPL V2.0]
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
@@ -41,25 +43,32 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 
-public class SerialKiller extends ObjectInputStream
-{
+public class SerialKiller extends ObjectInputStream {
 
     private final XMLConfiguration config;
+    private final FileChangedReloadingStrategy reloadStrategy;
+    private static String[] blacklist;
+    private static String[] whitelist;
 
-    public SerialKiller(InputStream inputStream, String configFile) throws IOException, ConfigurationException
-    {
+    public SerialKiller(InputStream inputStream, String configFile) throws IOException, ConfigurationException {
+        
         super(inputStream);
         config = new XMLConfiguration(configFile);
-        FileChangedReloadingStrategy reloadStrategy = new FileChangedReloadingStrategy();
+        reloadStrategy = new FileChangedReloadingStrategy();
+        //To avoid permanent disc access on successive property lookups 
         reloadStrategy.setRefreshDelay(config.getLong("refresh"));
         config.setReloadingStrategy(reloadStrategy);
+        blacklist = config.getStringArray("blacklist.regexp");
+        whitelist = config.getStringArray("whitelist.regexp");
     }
 
     @Override
-    protected Class<?> resolveClass(ObjectStreamClass serialInput) throws IOException, ClassNotFoundException
-    {
-        String[] blacklist = config.getStringArray("blacklist.regexp");
-        String[] whitelist = config.getStringArray("whitelist.regexp");
+    protected Class<?> resolveClass(ObjectStreamClass serialInput) throws IOException, ClassNotFoundException {
+
+        if (reloadStrategy.reloadingRequired()) {
+            blacklist = config.getStringArray("blacklist.regexp");
+            whitelist = config.getStringArray("whitelist.regexp");
+        }
 
         //Enforce SerialKiller's blacklist
         for (String blackRegExp : blacklist) {
