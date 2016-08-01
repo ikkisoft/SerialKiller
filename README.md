@@ -1,4 +1,4 @@
-# SerialKiller for 0xCAFEBABE
+# SerialKiller ![SerialKiller Logo](https://ikkisoft.com/img/sk.png "SerialKiller Logo")
 
 **SerialKiller** is an easy-to-use look-ahead Java deserialization library to secure application from untrusted input.
 
