@@ -1,34 +1,17 @@
-/*
+/**
  * SerialKiller.java
  *
  * Copyright (c) 2015-2016 Luca Carettoni
  *
- * Easy to use library to secure Java deserialization from untrusted input.
+ * SerialKiller is an easy-to-use look-ahead Java deserialization library 
+ * to secure application from untrusted input. When Java serialization is
+ * used to exchange information between a client and a server, attackers 
+ * can replace the legitimate serialized stream with malicious data.
+ * SerialKiller inspects Java classes during naming resolution and allows
+ * a combination of blacklisting/whitelisting to secure your application.
  *
- * Dual-Licensed Software:
+ * Dual-Licensed Software: Apache v2.0 and GPL v2.0
  *
- * [Apache V2.0]
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the LICENSE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- *
- * [GPL V2.0]
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version. This program is distributed in the
- * hope that it will be useful, but WITHOUT ANY WARRANTY.
  */
 package org.nibblesec.tools;
 
@@ -50,6 +33,13 @@ public class SerialKiller extends ObjectInputStream {
     private static String[] blacklist;
     private static String[] whitelist;
 
+    /**
+     * SerialKiller constructor, returns instance of ObjectInputStream
+     *
+     * @param inputStream The original InputStream, used by your service to receive serialized objects
+     * @param configFile The location of the config file (absolute path)
+     * @throws IOException ConfigurationException
+     */
     public SerialKiller(InputStream inputStream, String configFile) throws IOException, ConfigurationException {
         
         super(inputStream);
