@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.nibblesec.tools</groupId>
+  <artifactId>serialkiller</artifactId>
+  <version>3.0</version>
+  <packaging>jar</packaging>
+
+  <name>serialkiller</name>
+  <description>SerialKiller is an easy-to-use look-ahead Java deserialization library to secure application from untrusted input.</description>
+  <url>https://github.com/ikkisoft/SerialKiller</url>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+    <license>
+      <name>GNU General Public License (GPL)</name>
+      <url>http://www.gnu.org/licenses/gpl.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Luca Carettoni</name>
+      <email>luca.carettoni@ikkisoft.com</email>
+      <organization>Ikkisoft</organization>
+      <organizationUrl>https://www.ikkisoft.com</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/ikkisoft/SerialKiller.git</connection>
+    <developerConnection>scm:git:ssh://github.com:ikkisoft/SerialKiller.git</developerConnection>
+    <url>http://github.com/ikkisoft/SerialKiller/tree/master</url>
+  </scm>
+
+  <dependencies>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <version>3.2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-configuration</groupId>
+      <artifactId>commons-configuration</artifactId>
+      <version>1.10</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.2</version>
+    </dependency>
+  </dependencies>
+
+</project>
