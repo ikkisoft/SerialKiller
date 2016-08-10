@@ -10,7 +10,7 @@ When Java serialization is used to exchange information between a client and a s
 > This library may not be 100% production ready yet. Use at your own risk!
 
 ### How to protect your application with SerialKiller
-1. Download the latest version of the [SerialKiller's Jar](https://github.com/ikkisoft/SerialKiller/releases/). Alternatively, this library is also available on [Maven Central](http://search.maven.org/)
+1. Download the latest version of the [SerialKiller's Jar](https://github.com/ikkisoft/SerialKiller/releases/). Alternatively, this library is also available on [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cserialkiller)
 2. Import SerialKiller's Jar in your project
 3. Replace your deserialization *ObjectInputStream* with SerialKiller
 4. Tune the configuration file, based on your application requirements
