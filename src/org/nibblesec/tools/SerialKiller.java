@@ -55,8 +55,7 @@ public class SerialKiller extends ObjectInputStream {
         super(inputStream);
         
         config = new XMLConfiguration(configFile);
-        reloadStrategy = new FileChangedReloadingStrategy();
-        //To avoid permanent disc access on successive property lookups 
+        reloadStrategy = new FileChangedReloadingStrategy(); 
         reloadStrategy.setRefreshDelay(config.getLong("refresh", 6000));
         config.setReloadingStrategy(reloadStrategy);
         
