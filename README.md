@@ -40,10 +40,10 @@ Finally, you may want to catch *InvalidClassException* exceptions to gracefully 
 SerialKiller config supports the following settings:
 
  - **Refresh**: The refresh delay in milliseconds, used to *hot-reload* the configuration file. Good news! You don't need to restart your application if you change the config file
- - **BlackList**: A [Java regex](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) to define malicious classes. The [default configuration file](https://github.com/ikkisoft/SerialKiller/blob/master/config/serialkiller.conf) already includes several known payloads so that your application is protected by default against known attacks.
- - **WhiteList**: A [Java regex](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) to define classes used by your application. If you can quickly identify a list of trusted classes, this is the best way to secure your application. For instance, you could allow classes in your own package only.
- - **Profiling**: Starting from v0.4, SerialKiller introduces a *profiling* mode to enumerate classes deserialized by the application. In this mode, the deserialization is not blocked. To protect your application, make sure to use *'false'* for this setting.
-- **Logging**: Basic logging capabilities. The configuration allows to enable/disable logging as well as defining the log file path. Please note that hot-reload does not work on logging options. 
+ - **BlackList**: A [Java regex](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) to define malicious classes. The [default configuration file](https://github.com/ikkisoft/SerialKiller/blob/master/config/serialkiller.conf) already includes several known payloads so that your application is protected by default against known attacks
+ - **WhiteList**: A [Java regex](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) to define classes used by your application. If you can quickly identify a list of trusted classes, this is the best way to secure your application. For instance, you could allow classes in your own package only
+ - **Profiling**: Starting from v0.4, SerialKiller introduces a *profiling* mode to enumerate classes deserialized by the application. In this mode, the deserialization is not blocked. To protect your application, make sure to use *'false'* for this setting in production (default value)
+ - **Logging**: Basic logging capabilities. This configuration allows to enable/disable logging as well as to specify the log file path. Please note that hot-reload does not work on logging options
 
 Example of *serialkiller.conf*
 
