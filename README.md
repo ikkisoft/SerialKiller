@@ -34,12 +34,16 @@ String msg = (String) ois.readObject();
 
 The second argument is the location of SerialKiller's configuration file.
 
+Finally, you may want to catch *InvalidClassException* exceptions to gracefully handle insecure object deserializations.
+
 ### Tuning SerialKiller's configuration file (step 4)
 SerialKiller config supports the following settings:
 
  - **Refresh**: The refresh delay in milliseconds, used to *hot-reload* the configuration file. Good news! You don't need to restart your application if you change the config file
- - **BlackList**: A [Java regex](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) to define malicious classes. The [default configuration file](https://github.com/ikkisoft/SerialKiller/blob/master/config/serialkiller.conf) already includes a few known attack payloads
- -  **WhiteList**: A [Java regex](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) to define classes used by your application. If you can quickly identify a list of trusted classes, this is the best way to secure your application. For instance, you could allow classes in your own package only.
+ - **BlackList**: A [Java regex](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) to define malicious classes. The [default configuration file](https://github.com/ikkisoft/SerialKiller/blob/master/config/serialkiller.conf) already includes several known payloads so that your application is protected by default against known attacks.
+ - **WhiteList**: A [Java regex](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) to define classes used by your application. If you can quickly identify a list of trusted classes, this is the best way to secure your application. For instance, you could allow classes in your own package only.
+ - **Profiling**: Starting from v0.4, SerialKiller introduces a *profiling* mode to enumerate classes deserialized by the application. In this mode, the deserialization is not blocked. To protect your application, make sure to use *'false'* for this setting.
+- **Logging**: Basic logging capabilities. The configuration allows to enable/disable logging as well as defining the log file path. Please note that hot-reload does not work on logging options. 
 
 Example of *serialkiller.conf*
 
@@ -47,29 +51,42 @@ Example of *serialkiller.conf*
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- serialkiller.conf -->
 <config>
-    <refresh>6000</refresh>
-    <blacklist>
-      <!-- ysoserial's CommonsCollections1 payload  -->
-      <regexp>org\.apache\.commons\.collections\.functors\.InvokerTransformer$</regexp>	
-      <regexp>org\.apache\.commons\.collections\.functors\.InstantiateTransformer$</regexp>	
-      <!-- ysoserial's CommonsCollections2 payload  -->
-      <regexp>org\.apache\.commons\.collections4\.functors\.InvokerTransformer$</regexp>
-      <regexp>org\.apache\.commons\.collections4\.functors\.InstantiateTransformer$</regexp>
-      <!-- ysoserial's Groovy payload  -->
-      <regexp>org\.codehaus\.groovy\.runtime\.ConvertedClosure$</regexp>
-      <regexp>org\.codehaus\.groovy\.runtime\.MethodClosure$</regexp>
-      <!-- ysoserial's Spring1 payload  -->
-      <regexp>org\.springframework\.beans\.factory\.ObjectFactory$</regexp>	
-    </blacklist>
-    <whitelist>
-      <regexp>.*</regexp>
-    </whitelist>
+  <refresh>6000</refresh>
+  <mode>
+    <!-- set to 'false' for blocking mode -->
+    <profiling>false</profiling>
+  </mode>
+  <!-- if you're changing the logging settings, restart your app -->
+  <logging>
+    <enabled>true</enabled>
+    <logfile>/tmp/serialkiller.log</logfile>
+  </logging>
+  <blacklist>
+    <!-- ysoserial's BeanShell1 payload  -->
+    <regexp>bsh\.XThis$</regexp>
+    <regexp>bsh\.Interpreter$</regexp>
+    <!-- ysoserial's C3P0 payload  -->
+    <regexp>com\.mchange\.v2\.c3p0\.impl\.PoolBackedDataSourceBase$</regexp>
+    <!-- ysoserial's CommonsBeanutils1 payload  -->
+    <regexp>org\.apache\.commons\.beanutils\.BeanComparator$</regexp>
+    <!-- ysoserial's CommonsCollections1,3,5,6 payload  -->
+    <regexp>org\.apache\.commons\.collections\.Transformer$</regexp>
+    <regexp>org\.apache\.commons\.collections\.functors\.InvokerTransformer$</regexp> 
+    <regexp>org\.apache\.commons\.collections\.functors\.ChainedTransformer$</regexp>
+    <regexp>org\.apache\.commons\.collections\.functors\.ConstantTransformer$</regexp>
+    <regexp>org\.apache\.commons\.collections\.functors\.InstantiateTransformer$</regexp>
+    [...]
+  </blacklist>
+  <whitelist>
+    <regexp>.*</regexp>
+  </whitelist>
 </config>
+
 ```
 
 ### Credits
  - Ironically, SerialKiller uses some [Apache Commons](https://commons.apache.org/) libraries (configuration, logging, lang, collections)
- - Thanks to [@frohoff](https://twitter.com/frohoff) and [@gebl](https://twitter.com/gebl) for their work on unsafe Java object deserialization payloads
+ - Thanks to [@frohoff](https://twitter.com/frohoff) and [@gebl](https://twitter.com/gebl) for their work on unsafe Java object deserialization payloads. [Ysoserial](https://github.com/frohoff/ysoserial) is awesome!
  - [Pierre Ernst](http://www.ibm.com/developerworks/library/se-lookahead/#authorN10032) for the original idea around look-ahead java deserialization filters
 
 ### License
