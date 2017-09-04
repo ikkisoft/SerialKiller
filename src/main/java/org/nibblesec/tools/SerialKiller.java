@@ -51,6 +51,7 @@ public class SerialKiller extends ObjectInputStream {
 
     private final XMLConfiguration config;
 
+    // TODO: Why use JDK logging, when the project depends on commons-logging?
     private static final Logger LOGGER = Logger.getLogger(SerialKiller.class.getName());
 
     private LazyPatternList blacklist;
@@ -85,8 +86,8 @@ public class SerialKiller extends ObjectInputStream {
         boolean logEnabled = config.getBoolean("logging.enabled", true);
 
         if (logEnabled) {
-            String logFile = config.getString("logging.logfile", "/tmp/serialkiller.log");
             // TODO: Do we need to do this in code?
+            String logFile = config.getString("logging.logfile", "/tmp/serialkiller.log");
             Handler fileHandler = new FileHandler(logFile, true);
             LOGGER.addHandler(fileHandler);
             LOGGER.setLevel(Level.ALL);
@@ -144,7 +145,7 @@ public class SerialKiller extends ObjectInputStream {
         private final Pattern[] patterns;
 
         LazyPatternList(final String... regExps) {
-            this.regExps = requireNonNull(regExps, "regExps");
+            this.regExps = requireNonNull(regExps, "regExps").clone();
             this.patterns = new Pattern[regExps.length];
         }
 
@@ -160,7 +161,7 @@ public class SerialKiller extends ObjectInputStream {
 
                 @Override
                 public Pattern next() {
-                    // TODO: Multithreading issue here? Need atomic op
+                    // TODO: Possible multithreading issue here? Need atomic op?
                     if (patterns[index] == null) {
                         patterns[index] = Pattern.compile(regExps[index]);
                     }

@@ -42,4 +42,18 @@ public class LazyPatternListTest {
 
         assertEquals(3, index);
     }
+
+    @Test
+    public void testCreateSafeArgs() {
+        String[] patterns = {"1", "2"};
+        LazyPatternList list = new LazyPatternList(patterns);
+        patterns[1] = "three";
+
+        int index = 0;
+        for (Pattern pattern : list) {
+            assertEquals(String.valueOf(++index), pattern.pattern());
+        }
+
+        assertEquals(2, index);
+    }
 }
