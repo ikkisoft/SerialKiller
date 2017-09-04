@@ -14,6 +14,7 @@
  */
 package org.nibblesec.tools;
 
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
@@ -22,9 +23,10 @@ import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -39,24 +41,22 @@ import org.apache.commons.configuration.event.ConfigurationListener;
 import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 
 public class SerialKiller extends ObjectInputStream {
-    // TODO: Fix config reload issues
-    //       Move config out of this class?
-    // TODO: Fix regexp caching (see own issue in upstream). Need to be done per config or globally.
     // TODO: Should SEVERE logs be WARNINGS?
 
     // DONE:
     // Fix static issues
     // Create tests!
     // Allow exception message to contain class name (proper way) + tell if it's a whitelist/blacklist hit?
+    // Fix config reload issues
+    //  - Move config out of this class?
+    // Fix regexp caching (see own issue in upstream). Need to be done per config or globally.
 
-    private final XMLConfiguration config;
-
-    // TODO: Why use JDK logging, when the project depends on commons-logging?
+    // TODO: Does it make sense to use JDK logging, when the project depends on commons-logging?
     private static final Logger LOGGER = Logger.getLogger(SerialKiller.class.getName());
 
-    private LazyPatternList blacklist;
-    private LazyPatternList whitelist;
+    private static final Map<String, Configuration> configs = new ConcurrentHashMap<>();
 
+    private final Configuration config;
     private final boolean profiling;
 
     /**
@@ -70,25 +70,13 @@ public class SerialKiller extends ObjectInputStream {
     public SerialKiller(final InputStream inputStream, final String configFile) throws IOException, ConfigurationException {
         super(inputStream);
 
-        config = new XMLConfiguration(configFile);
+        config = configs.computeIfAbsent(configFile, Configuration::new);
 
-        // TODO: Is there anyone listening..?
-        FileChangedReloadingStrategy reloadStrategy = new FileChangedReloadingStrategy();
-        reloadStrategy.setRefreshDelay(config.getLong("refresh", 6000));
-        config.setReloadingStrategy(reloadStrategy);
+        profiling = config.isProfiling();
 
-        // TODO: We need to get this from the common config for the caching to work...
-        blacklist = new LazyPatternList(config.getStringArray("blacklist.regexp"));
-        whitelist = new LazyPatternList(config.getStringArray("whitelist.regexp"));
-
-        profiling = config.getBoolean("mode.profiling", false);
-
-        boolean logEnabled = config.getBoolean("logging.enabled", true);
-
-        if (logEnabled) {
+        if (config.isLogging()) {
             // TODO: Do we need to do this in code?
-            String logFile = config.getString("logging.logfile", "/tmp/serialkiller.log");
-            Handler fileHandler = new FileHandler(logFile, true);
+            Handler fileHandler = new FileHandler(config.logFile(), true);
             LOGGER.addHandler(fileHandler);
             LOGGER.setLevel(Level.ALL);
         }
@@ -97,7 +85,7 @@ public class SerialKiller extends ObjectInputStream {
     @Override
     protected Class<?> resolveClass(final ObjectStreamClass serialInput) throws IOException, ClassNotFoundException {
         // Enforce SerialKiller's blacklist
-        for (Pattern blackPattern : blacklist) {
+        for (Pattern blackPattern : config.blacklist()) {
             Matcher blackMatcher = blackPattern.matcher(serialInput.getName());
 
             if (blackMatcher.find()) {
@@ -115,7 +103,7 @@ public class SerialKiller extends ObjectInputStream {
         // Enforce SerialKiller's whitelist
         boolean safeClass = false;
 
-        for (Pattern whitePattern : whitelist) {
+        for (Pattern whitePattern : config.whitelist()) {
             Matcher whiteMatcher = whitePattern.matcher(serialInput.getName());
 
             if (whiteMatcher.find()) {
@@ -140,7 +128,66 @@ public class SerialKiller extends ObjectInputStream {
         return super.resolveClass(serialInput);
     }
 
-    static class LazyPatternList implements Iterable<Pattern> {
+    static final class Configuration {
+        private final XMLConfiguration config;
+
+        private boolean logging;
+        private boolean profiling;
+
+        private LazyPatternList blacklist;
+        private LazyPatternList whitelist;
+        private String logFile;
+
+        Configuration(final String configPath) {
+            try {
+                config = new XMLConfiguration(configPath);
+
+                FileChangedReloadingStrategy reloadStrategy = new FileChangedReloadingStrategy();
+                reloadStrategy.setRefreshDelay(config.getLong("refresh", 6000));
+                config.setReloadingStrategy(reloadStrategy);
+                // TODO: Rethink this, as reload checks happen on propery access only...
+                // https://commons.apache.org/proper/commons-configuration/userguide_v1.10/howto_filebased.html#Automatic_Reloading
+                config.addConfigurationListener(event -> init(config));
+
+                init(config);
+            }
+            catch (ConfigurationException e) {
+                throw new IllegalStateException("SerialKiller not properly configured: " + e.getMessage(), e);
+            }
+        }
+
+        private void init(final XMLConfiguration config) {
+            profiling = config.getBoolean("mode.profiling", false);
+            logging = config.getBoolean("logging.enabled", true);
+
+            logFile = config.getString("logging.logfile", "serialkiller.log");
+
+            blacklist = new LazyPatternList(config.getStringArray("blacklist.regexp"));
+            whitelist = new LazyPatternList(config.getStringArray("whitelist.regexp"));
+        }
+
+        boolean isLogging() {
+            return logging;
+        }
+
+        boolean isProfiling() {
+            return profiling;
+        }
+
+        Iterable<Pattern> blacklist() {
+            return blacklist;
+        }
+
+        Iterable<Pattern> whitelist() {
+            return whitelist;
+        }
+
+        String logFile() {
+            return logFile;
+        }
+    }
+
+    static final class LazyPatternList implements Iterable<Pattern> {
         private final String[] regExps;
         private final Pattern[] patterns;
 
@@ -174,6 +221,11 @@ public class SerialKiller extends ObjectInputStream {
                     throw new UnsupportedOperationException("remove");
                 }
             };
+        }
+
+        @Override
+        public String toString() {
+            return String.join(", ", regExps);
         }
     }
 }

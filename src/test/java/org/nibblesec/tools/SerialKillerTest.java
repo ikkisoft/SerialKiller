@@ -1,18 +1,24 @@
 package org.nibblesec.tools;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 
 import org.junit.Test;
@@ -92,6 +98,26 @@ public class SerialKillerTest {
 
             stream.readObject();
             fail("All should be blacklisted");
+        }
+    }
+
+    @Test
+    public void testReload() throws Exception {
+        Path tempFile = Files.createTempFile("sk-", ".conf");
+        Files.copy(new File("src/test/resources/reload-all-the-time.conf").toPath(), tempFile, REPLACE_EXISTING);
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+
+        try (ObjectOutputStream stream = new ObjectOutputStream(bytes)) {
+            stream.writeObject(42);
+        }
+
+        try (ObjectInputStream stream = new SerialKiller(new ByteArrayInputStream(bytes.toByteArray()), tempFile.toAbsolutePath().toString())) {
+            Thread.sleep(120L);
+            Files.copy(new File("src/test/resources/whitelist-all.conf").toPath(), tempFile, REPLACE_EXISTING);
+            Thread.sleep(120L); // Wait until a reload happens
+
+            assertEquals(42, stream.readObject());
         }
     }
 }
