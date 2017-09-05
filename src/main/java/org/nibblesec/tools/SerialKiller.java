@@ -1,15 +1,15 @@
-/**
+/*
  * SerialKiller.java
- * <p>
+ *
  * Copyright (c) 2015-2016 Luca Carettoni
- * <p>
+ *
  * SerialKiller is an easy-to-use look-ahead Java deserialization library
  * to secure application from untrusted input. When Java serialization is
  * used to exchange information between a client and a server, attackers
  * can replace the legitimate serialized stream with malicious data.
  * SerialKiller inspects Java classes during naming resolution and allows
  * a combination of blacklisting/whitelisting to secure your application.
- * <p>
+ *
  * Dual-Licensed Software: Apache v2.0 and GPL v2.0
  */
 package org.nibblesec.tools;
@@ -39,15 +39,6 @@ import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 
 public class SerialKiller extends ObjectInputStream {
     // TODO: Should SEVERE logs be WARNINGS?
-
-    // DONE:
-    // Fix static issues
-    // Create tests!
-    // Allow exception message to contain class name (proper way) + tell if it's a whitelist/blacklist hit?
-    // Fix config reload issues
-    //  - Move config out of this class?
-    // Fix regexp caching (see own issue in upstream). Need to be done per config or globally.
-
     // TODO: Does it make sense to use JDK logging, when the project depends on commons-logging?
     private static final Logger LOGGER = Logger.getLogger(SerialKiller.class.getName());
 
@@ -57,7 +48,7 @@ public class SerialKiller extends ObjectInputStream {
     private final boolean profiling;
 
     /**
-     * SerialKiller constructor, returns instance of ObjectInputStream
+     * SerialKiller constructor, returns instance of ObjectInputStream.
      *
      * @param inputStream The original InputStream, used by your service to receive serialized objects
      * @param configFile The location of the config file (absolute path)
@@ -72,7 +63,6 @@ public class SerialKiller extends ObjectInputStream {
         profiling = config.isProfiling();
 
         if (config.isLogging()) {
-            // TODO: Do we need to do this in code?
             Handler fileHandler = new FileHandler(config.logFile(), true);
             LOGGER.addHandler(fileHandler);
             LOGGER.setLevel(Level.ALL);
@@ -81,6 +71,8 @@ public class SerialKiller extends ObjectInputStream {
 
     @Override
     protected Class<?> resolveClass(final ObjectStreamClass serialInput) throws IOException, ClassNotFoundException {
+        config.reloadIfNeeded();
+
         // Enforce SerialKiller's blacklist
         for (Pattern blackPattern : config.blacklist()) {
             Matcher blackMatcher = blackPattern.matcher(serialInput.getName());
@@ -91,7 +83,7 @@ public class SerialKiller extends ObjectInputStream {
                     LOGGER.log(Level.FINE, "Blacklist match: ''{0}''", serialInput.getName());
                 } else {
                     // Blocking mode
-                    LOGGER.log(Level.SEVERE, "Blocked by blacklist ''{0}''. Match found for ''{1}''", new Object[]{blackPattern.pattern(), serialInput.getName()});
+                    LOGGER.log(Level.SEVERE, "Blocked by blacklist ''{0}''. Match found for ''{1}''", new Object[] {blackPattern.pattern(), serialInput.getName()});
                     throw new InvalidClassException(serialInput.getName(), "Class blocked from deserialization (blacklist)");
                 }
             }
@@ -138,13 +130,10 @@ public class SerialKiller extends ObjectInputStream {
                 FileChangedReloadingStrategy reloadStrategy = new FileChangedReloadingStrategy();
                 reloadStrategy.setRefreshDelay(config.getLong("refresh", 6000));
                 config.setReloadingStrategy(reloadStrategy);
-                // TODO: Rethink this, as reload checks happen on propery access only...
-                // https://commons.apache.org/proper/commons-configuration/userguide_v1.10/howto_filebased.html#Automatic_Reloading
                 config.addConfigurationListener(event -> init(config));
 
                 init(config);
-            }
-            catch (ConfigurationException | PatternSyntaxException e) {
+            } catch (ConfigurationException | PatternSyntaxException e) {
                 throw new IllegalStateException("SerialKiller not properly configured: " + e.getMessage(), e);
             }
         }
@@ -154,12 +143,9 @@ public class SerialKiller extends ObjectInputStream {
             whitelist = new PatternList(config.getStringArray("whitelist.regexp"));
         }
 
-        boolean isLogging() {
-            return config.getBoolean("logging.enabled", true);
-        }
-
-        boolean isProfiling() {
-            return config.getBoolean("mode.profiling", false);
+        void reloadIfNeeded() {
+            // NOTE: Unfortunately, this will invoke synchronized blocks in Commons Configuration
+            config.reload();
         }
 
         Iterable<Pattern> blacklist() {
@@ -168,6 +154,14 @@ public class SerialKiller extends ObjectInputStream {
 
         Iterable<Pattern> whitelist() {
             return whitelist;
+        }
+
+        boolean isProfiling() {
+            return config.getBoolean("mode.profiling", false);
+        }
+
+        boolean isLogging() {
+            return config.getBoolean("logging.enabled", true);
         }
 
         String logFile() {

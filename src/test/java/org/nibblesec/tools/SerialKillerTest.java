@@ -19,6 +19,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Date;
 
 import org.junit.Test;
@@ -104,7 +105,7 @@ public class SerialKillerTest {
     @Test
     public void testReload() throws Exception {
         Path tempFile = Files.createTempFile("sk-", ".conf");
-        Files.copy(new File("src/test/resources/reload-all-the-time.conf").toPath(), tempFile, REPLACE_EXISTING);
+        Files.copy(new File("src/test/resources/blacklist-all-refresh-10-ms.conf").toPath(), tempFile, REPLACE_EXISTING);
 
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 
@@ -113,9 +114,9 @@ public class SerialKillerTest {
         }
 
         try (ObjectInputStream stream = new SerialKiller(new ByteArrayInputStream(bytes.toByteArray()), tempFile.toAbsolutePath().toString())) {
-            Thread.sleep(120L);
             Files.copy(new File("src/test/resources/whitelist-all.conf").toPath(), tempFile, REPLACE_EXISTING);
-            Thread.sleep(120L); // Wait until a reload happens
+            Files.setLastModifiedTime(tempFile, FileTime.fromMillis(System.currentTimeMillis())); // Commons configuration watches file modified time
+            Thread.sleep(12L); // Wait to ensure a reload happens
 
             assertEquals(42, stream.readObject());
         }

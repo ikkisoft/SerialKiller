@@ -1,14 +1,14 @@
 package org.nibblesec.tools;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.FileTime;
 
 import org.junit.Test;
 import org.nibblesec.tools.SerialKiller.Configuration;
@@ -52,7 +52,7 @@ public class ConfigurationTest {
     @Test
     public void testReload() throws Exception {
         Path tempFile = Files.createTempFile("sk-", ".conf");
-        Files.copy(new File("src/test/resources/reload-all-the-time.conf").toPath(), tempFile, REPLACE_EXISTING);
+        Files.copy(new File("src/test/resources/blacklist-all-refresh-10-ms.conf").toPath(), tempFile, REPLACE_EXISTING);
 
         Configuration configuration = new Configuration(tempFile.toAbsolutePath().toString());
 
@@ -62,11 +62,11 @@ public class ConfigurationTest {
         assertEquals(".*", configuration.blacklist().iterator().next().pattern());
         assertEquals("java\\.lang\\..*", configuration.whitelist().iterator().next().pattern());
 
-        Thread.sleep(120L);
-
         Files.copy(new File("src/test/resources/whitelist-all.conf").toPath(), tempFile, REPLACE_EXISTING);
+        Files.setLastModifiedTime(tempFile, FileTime.fromMillis(System.currentTimeMillis())); // Commons configuration watches file modified time
+        Thread.sleep(12L); // Wait to ensure a reload happens
 
-        Thread.sleep(120L); // Wait until a reload happens
+        configuration.reloadIfNeeded(); // Trigger reload
 
         assertFalse(configuration.blacklist().iterator().hasNext());
         assertEquals(".*", configuration.whitelist().iterator().next().pattern());

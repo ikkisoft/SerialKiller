@@ -1,9 +1,13 @@
 package org.nibblesec.tools;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.junit.Test;
 import org.nibblesec.tools.SerialKiller.PatternList;
@@ -14,12 +18,25 @@ import org.nibblesec.tools.SerialKiller.PatternList;
 public class PatternListTest {
     @Test(expected = NullPointerException.class)
     public void testCreateNull() {
-        new PatternList(null);
+        new PatternList((String[]) null);
+    }
+
+    @Test(expected = PatternSyntaxException.class)
+    public void testCreateBadPattern() {
+        new PatternList("(");
+    }
+
+    @Test
+    public void testCreateEmpty() {
+        PatternList list = new PatternList();
+
+        Iterator<Pattern> iterator = list.iterator();
+        assertFalse(iterator.hasNext());
     }
 
     @Test
     public void testCreateSingle() {
-        PatternList list = new SerialKiller.PatternList("a");
+        PatternList list = new PatternList("a");
 
         Iterator<Pattern> iterator = list.iterator();
         assertTrue(iterator.hasNext());
