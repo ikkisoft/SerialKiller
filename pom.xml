@@ -7,7 +7,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <groupId>org.nibblesec</groupId>
   <artifactId>serialkiller</artifactId>
-  <version>0.4-fix</version>
+  <version>0.4-fix-2</version>
   <packaging>jar</packaging>
 
   <name>serialkiller</name>
