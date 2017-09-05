@@ -53,9 +53,9 @@ public class SerialKiller extends ObjectInputStream {
      * @param inputStream The original InputStream, used by your service to receive serialized objects
      * @param configFile The location of the config file (absolute path)
      * @throws java.io.IOException File I/O exception
-     * @throws org.apache.commons.configuration.ConfigurationException Config exception
+     * @throws IllegalStateException Invalid configuration exception
      */
-    public SerialKiller(final InputStream inputStream, final String configFile) throws IOException, ConfigurationException {
+    public SerialKiller(final InputStream inputStream, final String configFile) throws IOException {
         super(inputStream);
 
         config = configs.computeIfAbsent(configFile, Configuration::new);
