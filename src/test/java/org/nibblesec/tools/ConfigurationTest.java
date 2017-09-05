@@ -33,6 +33,11 @@ public class ConfigurationTest {
         new Configuration(tempFile.toAbsolutePath().toString());
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testCreateBadPattern() {
+        new Configuration("src/test/resources/broken-pattern.conf");
+    }
+
     @Test
     public void testCreateGood() {
         Configuration configuration = new Configuration("src/test/resources/blacklist-all.conf");

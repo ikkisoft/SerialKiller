@@ -6,20 +6,20 @@ import java.util.Iterator;
 import java.util.regex.Pattern;
 
 import org.junit.Test;
-import org.nibblesec.tools.SerialKiller.LazyPatternList;
+import org.nibblesec.tools.SerialKiller.PatternList;
 
 /**
- * LazyPatternListTest
+ * PatternListTest
  */
-public class LazyPatternListTest {
+public class PatternListTest {
     @Test(expected = NullPointerException.class)
     public void testCreateNull() {
-        new LazyPatternList(null);
+        new PatternList(null);
     }
 
     @Test
     public void testCreateSingle() {
-        LazyPatternList list = new LazyPatternList("a");
+        PatternList list = new SerialKiller.PatternList("a");
 
         Iterator<Pattern> iterator = list.iterator();
         assertTrue(iterator.hasNext());
@@ -32,7 +32,7 @@ public class LazyPatternListTest {
     @Test
     public void testCreateSequence() {
         String[] patterns = {"a", "b", "c"};
-        LazyPatternList list = new LazyPatternList(patterns);
+        PatternList list = new PatternList(patterns);
 
         int index = 0;
         for (Pattern pattern : list) {
@@ -46,7 +46,7 @@ public class LazyPatternListTest {
     @Test
     public void testCreateSafeArgs() {
         String[] patterns = {"1", "2"};
-        LazyPatternList list = new LazyPatternList(patterns);
+        PatternList list = new PatternList(patterns);
         patterns[1] = "three";
 
         int index = 0;

@@ -14,7 +14,6 @@
  */
 package org.nibblesec.tools;
 
-import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
@@ -22,10 +21,9 @@ import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -33,11 +31,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.configuration.event.ConfigurationEvent;
-import org.apache.commons.configuration.event.ConfigurationListener;
 import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 
 public class SerialKiller extends ObjectInputStream {
@@ -131,12 +128,8 @@ public class SerialKiller extends ObjectInputStream {
     static final class Configuration {
         private final XMLConfiguration config;
 
-        private boolean logging;
-        private boolean profiling;
-
-        private LazyPatternList blacklist;
-        private LazyPatternList whitelist;
-        private String logFile;
+        private PatternList blacklist;
+        private PatternList whitelist;
 
         Configuration(final String configPath) {
             try {
@@ -151,27 +144,22 @@ public class SerialKiller extends ObjectInputStream {
 
                 init(config);
             }
-            catch (ConfigurationException e) {
+            catch (ConfigurationException | PatternSyntaxException e) {
                 throw new IllegalStateException("SerialKiller not properly configured: " + e.getMessage(), e);
             }
         }
 
         private void init(final XMLConfiguration config) {
-            profiling = config.getBoolean("mode.profiling", false);
-            logging = config.getBoolean("logging.enabled", true);
-
-            logFile = config.getString("logging.logfile", "serialkiller.log");
-
-            blacklist = new LazyPatternList(config.getStringArray("blacklist.regexp"));
-            whitelist = new LazyPatternList(config.getStringArray("whitelist.regexp"));
+            blacklist = new PatternList(config.getStringArray("blacklist.regexp"));
+            whitelist = new PatternList(config.getStringArray("whitelist.regexp"));
         }
 
         boolean isLogging() {
-            return logging;
+            return config.getBoolean("logging.enabled", true);
         }
 
         boolean isProfiling() {
-            return profiling;
+            return config.getBoolean("mode.profiling", false);
         }
 
         Iterable<Pattern> blacklist() {
@@ -183,17 +171,20 @@ public class SerialKiller extends ObjectInputStream {
         }
 
         String logFile() {
-            return logFile;
+            return config.getString("logging.logfile", "serialkiller.log");
         }
     }
 
-    static final class LazyPatternList implements Iterable<Pattern> {
-        private final String[] regExps;
+    static final class PatternList implements Iterable<Pattern> {
         private final Pattern[] patterns;
 
-        LazyPatternList(final String... regExps) {
-            this.regExps = requireNonNull(regExps, "regExps").clone();
+        PatternList(final String... regExps) {
+            requireNonNull(regExps, "regExps");
+
             this.patterns = new Pattern[regExps.length];
+            for (int i = 0; i < regExps.length; i++) {
+                patterns[i] = Pattern.compile(regExps[i]);
+            }
         }
 
         @Override
@@ -203,16 +194,11 @@ public class SerialKiller extends ObjectInputStream {
 
                 @Override
                 public boolean hasNext() {
-                    return index < regExps.length;
+                    return index < patterns.length;
                 }
 
                 @Override
                 public Pattern next() {
-                    // TODO: Possible multithreading issue here? Need atomic op?
-                    if (patterns[index] == null) {
-                        patterns[index] = Pattern.compile(regExps[index]);
-                    }
-
                     return patterns[index++];
                 }
 
@@ -225,7 +211,7 @@ public class SerialKiller extends ObjectInputStream {
 
         @Override
         public String toString() {
-            return String.join(", ", regExps);
+            return Arrays.toString(patterns);
         }
     }
 }
