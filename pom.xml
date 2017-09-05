@@ -53,12 +53,11 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </plugins>
   </build>
 
-  <!-- TODO: Update to latest versions! -->
   <dependencies>
     <dependency>
       <groupId>commons-collections</groupId>
       <artifactId>commons-collections</artifactId>
-      <version>3.2.1</version>
+      <version>3.2.2</version>
     </dependency>
     <dependency>
       <groupId>commons-configuration</groupId>
