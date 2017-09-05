@@ -26,7 +26,7 @@ import org.junit.Test;
 public class SerialKillerTest {
     @Test
     public void testBlacklisted() throws Exception {
-        try (ObjectInputStream stream = new SerialKiller(getClass().getResourceAsStream("/hibernate1.ser"), "config/serialkiller.conf")) {
+        try (ObjectInputStream stream = new SerialKiller(getClass().getResourceAsStream("/hibernate1.ser"), "src/test/resources/serialkiller.conf")) {
             try {
                 stream.readObject();
                 fail();
@@ -49,7 +49,7 @@ public class SerialKillerTest {
             stream.writeObject(new java.sql.Date(42L));
         }
 
-        try (ObjectInputStream stream = new SerialKiller(new ByteArrayInputStream(bytes.toByteArray()), "config/serialkiller.conf")) {
+        try (ObjectInputStream stream = new SerialKiller(new ByteArrayInputStream(bytes.toByteArray()), "src/test/resources/serialkiller.conf")) {
             try {
                 stream.readObject();
                 fail();
@@ -75,7 +75,7 @@ public class SerialKillerTest {
             stream.writeObject(42);
         }
 
-        try (ObjectInputStream stream = new SerialKiller(new ByteArrayInputStream(bytes.toByteArray()), "config/serialkiller.conf")) {
+        try (ObjectInputStream stream = new SerialKiller(new ByteArrayInputStream(bytes.toByteArray()), "src/test/resources/serialkiller.conf")) {
             assertEquals(s, stream.readObject());
             assertEquals(42, stream.readObject());
         }
