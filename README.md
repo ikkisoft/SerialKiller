@@ -62,23 +62,31 @@ Example of *serialkiller.conf*
     <logfile>/tmp/serialkiller.log</logfile>
   </logging>
   <blacklist>
-    <!-- ysoserial's BeanShell1 payload  -->
-    <regexp>bsh\.XThis$</regexp>
-    <regexp>bsh\.Interpreter$</regexp>
-    <!-- ysoserial's C3P0 payload  -->
-    <regexp>com\.mchange\.v2\.c3p0\.impl\.PoolBackedDataSourceBase$</regexp>
-    <!-- ysoserial's CommonsBeanutils1 payload  -->
-    <regexp>org\.apache\.commons\.beanutils\.BeanComparator$</regexp>
-    <!-- ysoserial's CommonsCollections1,3,5,6 payload  -->
-    <regexp>org\.apache\.commons\.collections\.Transformer$</regexp>
-    <regexp>org\.apache\.commons\.collections\.functors\.InvokerTransformer$</regexp> 
-    <regexp>org\.apache\.commons\.collections\.functors\.ChainedTransformer$</regexp>
-    <regexp>org\.apache\.commons\.collections\.functors\.ConstantTransformer$</regexp>
-    <regexp>org\.apache\.commons\.collections\.functors\.InstantiateTransformer$</regexp>
-    [...]
+  <!--Section for Regular Expressions-->
+    <regexps>
+        <!-- ysoserial's BeanShell1 payload  -->
+        <regexp>bsh\.XThis$</regexp>
+        <regexp>bsh\.Interpreter$</regexp>
+        <!-- ysoserial's C3P0 payload  -->
+        <regexp>com\.mchange\.v2\.c3p0\.impl\.PoolBackedDataSourceBase$</regexp>
+	    <!-- ysoserial's MozillaRhino1 payload -->
+	    <regexp>org\.mozilla\.javascript\..*$</regexp>
+        [...]
+    </regexps>
+    <!--Section for full-package name-->
+    <list>
+        <!-- ysoserial's CommonsCollections1,3,5,6 payload  -->
+        <name>org.apache.commons.collections.functors.InstantiateTransformer</name>
+        <name>org.apache.commons.collections.functors.ConstantTransformer</name>
+        <name>org.apache.commons.collections.functors.ChainedTransformer</name>
+        <name>org.apache.commons.collections.functors.InvokerTransformer</name>
+        [...]
+    </list>
   </blacklist>
   <whitelist>
-    <regexp>.*</regexp>
+    <regexps>
+        <regexp>.*</regexp>
+    </regexps>
   </whitelist>
 </config>
 
