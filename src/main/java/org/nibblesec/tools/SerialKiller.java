@@ -21,9 +21,7 @@ import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
@@ -89,6 +87,17 @@ public class SerialKiller extends ObjectInputStream {
             }
         }
 
+        if (config.blacklist.getNames().contains(serialInput.getName())){
+            if (profiling) {
+                // Reporting mode
+                LOGGER.log(Level.FINE, "Blacklist match: ''{0}''", serialInput.getName());
+            } else {
+                // Blocking mode
+                LOGGER.log(Level.SEVERE, "Blocked by blacklist ''{0}''. Match found for ''{1}''", new Object[] {serialInput.getName(), serialInput.getName()});
+                throw new InvalidClassException(serialInput.getName(), "Class blocked from deserialization (blacklist)");
+            }
+        }
+
         // Enforce SerialKiller's whitelist
         boolean safeClass = false;
 
@@ -120,8 +129,8 @@ public class SerialKiller extends ObjectInputStream {
     static final class Configuration {
         private final XMLConfiguration config;
 
-        private PatternList blacklist;
-        private PatternList whitelist;
+        private TemplateList blacklist;
+        private TemplateList whitelist;
 
         Configuration(final String configPath) {
             try {
@@ -139,8 +148,8 @@ public class SerialKiller extends ObjectInputStream {
         }
 
         private void init(final XMLConfiguration config) {
-            blacklist = new PatternList(config.getStringArray("blacklist.regexp"));
-            whitelist = new PatternList(config.getStringArray("whitelist.regexp"));
+            blacklist = new TemplateList(new HashSet<>(Arrays.asList(config.getStringArray("blacklist.list.name"))),config.getStringArray("blacklist.regexps.regexp"));
+            whitelist = new TemplateList(new HashSet<>(Arrays.asList(config.getStringArray("whitelist.list.name"))), config.getStringArray("whitelist.regexps.regexp"));
         }
 
         void reloadIfNeeded() {
@@ -169,10 +178,13 @@ public class SerialKiller extends ObjectInputStream {
         }
     }
 
-    static final class PatternList implements Iterable<Pattern> {
+    static final class TemplateList implements Iterable<Pattern> {
         private final Pattern[] patterns;
 
-        PatternList(final String... regExps) {
+        private final Set<String> names;
+
+        TemplateList(Set<String> names, final String... regExps) {
+            this.names = names;
             requireNonNull(regExps, "regExps");
 
             this.patterns = new Pattern[regExps.length];
@@ -206,6 +218,10 @@ public class SerialKiller extends ObjectInputStream {
         @Override
         public String toString() {
             return Arrays.toString(patterns);
+        }
+
+        public Set<String> getNames() {
+            return names;
         }
     }
 }

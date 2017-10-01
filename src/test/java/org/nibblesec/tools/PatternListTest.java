@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.junit.Test;
-import org.nibblesec.tools.SerialKiller.PatternList;
+import org.nibblesec.tools.SerialKiller.TemplateList;
 
 /**
  * PatternListTest
@@ -18,17 +18,17 @@ import org.nibblesec.tools.SerialKiller.PatternList;
 public class PatternListTest {
     @Test(expected = NullPointerException.class)
     public void testCreateNull() {
-        new PatternList((String[]) null);
+        new TemplateList(null,(String[]) null);
     }
 
     @Test(expected = PatternSyntaxException.class)
     public void testCreateBadPattern() {
-        new PatternList("(");
+        new TemplateList(null,"(");
     }
 
     @Test
     public void testCreateEmpty() {
-        PatternList list = new PatternList();
+        TemplateList list = new TemplateList(null);
 
         Iterator<Pattern> iterator = list.iterator();
         assertFalse(iterator.hasNext());
@@ -36,7 +36,7 @@ public class PatternListTest {
 
     @Test
     public void testCreateSingle() {
-        PatternList list = new PatternList("a");
+        TemplateList list = new TemplateList(null,"a");
 
         Iterator<Pattern> iterator = list.iterator();
         assertTrue(iterator.hasNext());
@@ -49,7 +49,7 @@ public class PatternListTest {
     @Test
     public void testCreateSequence() {
         String[] patterns = {"a", "b", "c"};
-        PatternList list = new PatternList(patterns);
+        TemplateList list = new TemplateList(null, patterns);
 
         int index = 0;
         for (Pattern pattern : list) {
@@ -63,7 +63,7 @@ public class PatternListTest {
     @Test
     public void testCreateSafeArgs() {
         String[] patterns = {"1", "2"};
-        PatternList list = new PatternList(patterns);
+        TemplateList list = new TemplateList(null,patterns);
         patterns[1] = "three";
 
         int index = 0;
