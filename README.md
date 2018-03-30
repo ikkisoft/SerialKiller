@@ -7,7 +7,7 @@ When Java serialization is used to exchange information between a client and a s
 ![SerialKiller in action](http://i.imgur.com/wgoF62D.png "SerialKiller in action")
 
 > **Disclaimer:** 
-> This library may not be 100% production ready yet. Use at your own risk!
+> This library may (or may not) be 100% production ready yet. Use at your own risk!
 
 ### How to protect your application with SerialKiller
 1. Download the latest version of the [SerialKiller's Jar](https://github.com/ikkisoft/SerialKiller/releases/). Alternatively, this library is also available on [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cserialkiller)
@@ -34,7 +34,8 @@ String msg = (String) ois.readObject();
 
 The second argument is the location of SerialKiller's configuration file.
 
-Finally, you may want to catch *InvalidClassException* exceptions to gracefully handle insecure object deserializations.
+Finally, you may want to catch *InvalidClassException* exceptions to gracefully handle insecure object deserializations. 
+Please note that this library does require *Java 8*.
 
 ### Tuning SerialKiller's configuration file (step 4)
 SerialKiller config supports the following settings:
@@ -43,7 +44,7 @@ SerialKiller config supports the following settings:
  - **BlackList**: A [Java regex](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) to define malicious classes. The [default configuration file](https://github.com/ikkisoft/SerialKiller/blob/master/config/serialkiller.conf) already includes several known payloads so that your application is protected by default against known attacks
  - **WhiteList**: A [Java regex](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html) to define classes used by your application. If you can quickly identify a list of trusted classes, this is the best way to secure your application. For instance, you could allow classes in your own package only
  - **Profiling**: Starting from v0.4, SerialKiller introduces a *profiling* mode to enumerate classes deserialized by the application. In this mode, the deserialization is not blocked. To protect your application, make sure to use *'false'* for this setting in production (default value)
- - **Logging**: Basic logging capabilities. This configuration allows to enable/disable logging as well as to specify the log file path. Please note that hot-reload does not work on logging options
+ - **Logging**: Logging support compatible to native LogManager using the *java.util.logging.config.file* system property or *lib/logging.properties*. See [Java8 LogManager](https://docs.oracle.com/javase/8/docs/api/java/util/logging/LogManager.html) for more details.
 
 Example of *serialkiller.conf*
 
@@ -56,11 +57,6 @@ Example of *serialkiller.conf*
     <!-- set to 'false' for blocking mode -->
     <profiling>false</profiling>
   </mode>
-  <!-- if you're changing the logging settings, restart your app -->
-  <logging>
-    <enabled>true</enabled>
-    <logfile>/tmp/serialkiller.log</logfile>
-  </logging>
   <blacklist>
   <!--Section for Regular Expressions-->
     <regexps>

@@ -21,12 +21,12 @@ import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
-import java.util.*;
+import java.util.Map;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -34,11 +34,12 @@ import java.util.regex.PatternSyntaxException;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class SerialKiller extends ObjectInputStream {
-    // TODO: Should SEVERE logs be WARNINGS?
-    // TODO: Does it make sense to use JDK logging, when the project depends on commons-logging?
-    private static final Logger LOGGER = Logger.getLogger(SerialKiller.class.getName());
+
+    private static final Log LOGGER = LogFactory.getLog(SerialKiller.class.getName());
 
     private static final Map<String, Configuration> configs = new ConcurrentHashMap<>();
 
@@ -57,14 +58,7 @@ public class SerialKiller extends ObjectInputStream {
         super(inputStream);
 
         config = configs.computeIfAbsent(configFile, Configuration::new);
-
         profiling = config.isProfiling();
-
-        if (config.isLogging()) {
-            Handler fileHandler = new FileHandler(config.logFile(), true);
-            LOGGER.addHandler(fileHandler);
-            LOGGER.setLevel(Level.ALL);
-        }
     }
 
     @Override
@@ -78,23 +72,12 @@ public class SerialKiller extends ObjectInputStream {
             if (blackMatcher.find()) {
                 if (profiling) {
                     // Reporting mode
-                    LOGGER.log(Level.FINE, "Blacklist match: ''{0}''", serialInput.getName());
+                    LOGGER.info(String.format("Blacklist match: '%s'", serialInput.getName()));
                 } else {
                     // Blocking mode
-                    LOGGER.log(Level.SEVERE, "Blocked by blacklist ''{0}''. Match found for ''{1}''", new Object[] {blackPattern.pattern(), serialInput.getName()});
+                    LOGGER.error(String.format("Blocked by blacklist '%s'. Match found for '%s'", new Object[] {blackPattern.pattern(), serialInput.getName()}));
                     throw new InvalidClassException(serialInput.getName(), "Class blocked from deserialization (blacklist)");
                 }
-            }
-        }
-
-        if (config.blacklist.getNames().contains(serialInput.getName())){
-            if (profiling) {
-                // Reporting mode
-                LOGGER.log(Level.FINE, "Blacklist match: ''{0}''", serialInput.getName());
-            } else {
-                // Blocking mode
-                LOGGER.log(Level.SEVERE, "Blocked by blacklist ''{0}''. Match found for ''{1}''", new Object[] {serialInput.getName(), serialInput.getName()});
-                throw new InvalidClassException(serialInput.getName(), "Class blocked from deserialization (blacklist)");
             }
         }
 
@@ -109,7 +92,7 @@ public class SerialKiller extends ObjectInputStream {
 
                 if (profiling) {
                     // Reporting mode
-                    LOGGER.log(Level.FINE, "Whitelist match: ''{0}''", serialInput.getName());
+                    LOGGER.info(String.format("Whitelist match: '%s'", serialInput.getName()));
                 }
 
                 // We have found a whitelist match, no need to continue
@@ -119,7 +102,7 @@ public class SerialKiller extends ObjectInputStream {
 
         if (!safeClass && !profiling) {
             // Blocking mode
-            LOGGER.log(Level.SEVERE, "Blocked by whitelist. No match found for ''{0}''", serialInput.getName());
+            LOGGER.error(String.format("Blocked by whitelist. No match found for '%s'", serialInput.getName()));
             throw new InvalidClassException(serialInput.getName(), "Class blocked from deserialization (non-whitelist)");
         }
 
@@ -129,8 +112,8 @@ public class SerialKiller extends ObjectInputStream {
     static final class Configuration {
         private final XMLConfiguration config;
 
-        private TemplateList blacklist;
-        private TemplateList whitelist;
+        private PatternList blacklist;
+        private PatternList whitelist;
 
         Configuration(final String configPath) {
             try {
@@ -148,8 +131,8 @@ public class SerialKiller extends ObjectInputStream {
         }
 
         private void init(final XMLConfiguration config) {
-            blacklist = new TemplateList(new HashSet<>(Arrays.asList(config.getStringArray("blacklist.list.name"))),config.getStringArray("blacklist.regexps.regexp"));
-            whitelist = new TemplateList(new HashSet<>(Arrays.asList(config.getStringArray("whitelist.list.name"))), config.getStringArray("whitelist.regexps.regexp"));
+            blacklist = new PatternList(config.getStringArray("blacklist.regexps.regexp"));
+            whitelist = new PatternList(config.getStringArray("whitelist.regexps.regexp"));
         }
 
         void reloadIfNeeded() {
@@ -168,23 +151,13 @@ public class SerialKiller extends ObjectInputStream {
         boolean isProfiling() {
             return config.getBoolean("mode.profiling", false);
         }
-
-        boolean isLogging() {
-            return config.getBoolean("logging.enabled", true);
-        }
-
-        String logFile() {
-            return config.getString("logging.logfile", "serialkiller.log");
-        }
     }
 
-    static final class TemplateList implements Iterable<Pattern> {
+    static final class PatternList implements Iterable<Pattern> {
         private final Pattern[] patterns;
 
-        private final Set<String> names;
+        PatternList(final String... regExps) {
 
-        TemplateList(Set<String> names, final String... regExps) {
-            this.names = names;
             requireNonNull(regExps, "regExps");
 
             this.patterns = new Pattern[regExps.length];
@@ -220,8 +193,5 @@ public class SerialKiller extends ObjectInputStream {
             return Arrays.toString(patterns);
         }
 
-        public Set<String> getNames() {
-            return names;
-        }
     }
 }

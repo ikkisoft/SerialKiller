@@ -110,9 +110,11 @@ public class SerialKillerTest {
         }
 
         try (ObjectInputStream stream = new SerialKiller(new ByteArrayInputStream(bytes.toByteArray()), tempFile.toAbsolutePath().toString())) {
+
             Files.copy(new File("src/test/resources/whitelist-all.conf").toPath(), tempFile, REPLACE_EXISTING);
+            Thread.sleep(1000L); // Wait to ensure the file is fully copied
             Files.setLastModifiedTime(tempFile, FileTime.fromMillis(System.currentTimeMillis())); // Commons configuration watches file modified time
-            Thread.sleep(12L); // Wait to ensure a reload happens
+            Thread.sleep(1000L); // Wait to ensure a reload happens
 
             assertEquals(42, stream.readObject());
         }

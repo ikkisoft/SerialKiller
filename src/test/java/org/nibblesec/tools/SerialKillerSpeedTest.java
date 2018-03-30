@@ -18,11 +18,11 @@ public class SerialKillerSpeedTest {
         outputStream.flush();
         outputStream.close();
 
-        speedTest(byteArrayOutputStream, new TestDeserializeCommon());
-        speedTest(byteArrayOutputStream, new TestDeserializeSerialKiller());
+        speedTest(byteArrayOutputStream, new TestDeserializeCommon(),false);
+        speedTest(byteArrayOutputStream, new TestDeserializeSerialKiller(), true);
     }
 
-    private static void speedTest(ByteArrayOutputStream byteArrayOutputStream, TestDeserialize testDeserialize) throws IOException, ClassNotFoundException, ConfigurationException {
+    private static void speedTest(ByteArrayOutputStream byteArrayOutputStream, TestDeserialize testDeserialize, boolean withSerialKiller) throws IOException, ClassNotFoundException, ConfigurationException {
         for (int i = 0; i < 1000; i++) {
             testDeserialize.deserialize(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
         }
@@ -33,7 +33,11 @@ public class SerialKillerSpeedTest {
         }
 
         long result = System.currentTimeMillis() - timeStart;
-        System.out.println("Result: " + result);
+        if(withSerialKiller){
+            System.out.println("Result (WITH SerialKiller): " + result + "ms for 10.000 iterations");
+        }else{
+            System.out.println("Result (WITHOUT SerialKiller): " + result + "ms for 10.000 iterations");
+        }
     }
 
     interface TestDeserialize{
