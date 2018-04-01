@@ -65,48 +65,55 @@ public class SerialKiller extends ObjectInputStream {
     protected Class<?> resolveClass(final ObjectStreamClass serialInput) throws IOException, ClassNotFoundException {
         config.reloadIfNeeded();
 
+        final String serialInputName = serialInput.getName();
+
         // Enforce SerialKiller's blacklist
+        checkBlackList(serialInputName);
+
+        // Enforce SerialKiller's whitelist
+        boolean isSafeClass = isCheckedClassInWhiteList(serialInputName);
+
+        if (!isSafeClass && !profiling) {
+            // Blocking mode
+            LOGGER.error(String.format("Blocked by whitelist. No match found for '%s'", serialInputName));
+            throw new InvalidClassException(serialInputName, "Class blocked from deserialization (non-whitelist)");
+        }
+
+        return super.resolveClass(serialInput);
+    }
+
+    private void checkBlackList(final String serialInputName) throws InvalidClassException {
         for (Pattern blackPattern : config.blacklist()) {
-            Matcher blackMatcher = blackPattern.matcher(serialInput.getName());
+            Matcher blackMatcher = blackPattern.matcher(serialInputName);
 
             if (blackMatcher.find()) {
                 if (profiling) {
                     // Reporting mode
-                    LOGGER.info(String.format("Blacklist match: '%s'", serialInput.getName()));
+                    LOGGER.info(String.format("Blacklist match: '%s'", serialInputName));
                 } else {
                     // Blocking mode
-                    LOGGER.error(String.format("Blocked by blacklist '%s'. Match found for '%s'", new Object[] {blackPattern.pattern(), serialInput.getName()}));
-                    throw new InvalidClassException(serialInput.getName(), "Class blocked from deserialization (blacklist)");
+                    LOGGER.error(String.format("Blocked by blacklist '%s'. Match found for '%s'", new Object[] {blackPattern.pattern(), serialInputName}));
+                    throw new InvalidClassException(serialInputName, "Class blocked from deserialization (blacklist)");
                 }
             }
         }
+    }
 
-        // Enforce SerialKiller's whitelist
-        boolean safeClass = false;
-
+    private boolean isCheckedClassInWhiteList(final String serialInputName) {
         for (Pattern whitePattern : config.whitelist()) {
-            Matcher whiteMatcher = whitePattern.matcher(serialInput.getName());
+            Matcher whiteMatcher = whitePattern.matcher(serialInputName);
 
             if (whiteMatcher.find()) {
-                safeClass = true;
-
                 if (profiling) {
                     // Reporting mode
-                    LOGGER.info(String.format("Whitelist match: '%s'", serialInput.getName()));
+                    LOGGER.info(String.format("Whitelist match: '%s'", serialInputName));
                 }
 
                 // We have found a whitelist match, no need to continue
-                break;
+                return true;
             }
         }
-
-        if (!safeClass && !profiling) {
-            // Blocking mode
-            LOGGER.error(String.format("Blocked by whitelist. No match found for '%s'", serialInput.getName()));
-            throw new InvalidClassException(serialInput.getName(), "Class blocked from deserialization (non-whitelist)");
-        }
-
-        return super.resolveClass(serialInput);
+        return false;
     }
 
     static final class Configuration {
