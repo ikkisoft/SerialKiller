@@ -67,6 +67,15 @@ public class SerialKiller extends ObjectInputStream {
 
         final String serialInputName = serialInput.getName();
 
+        if (!config.isSafeClass(serialInputName)) {
+            checkSafeClass(serialInputName);
+            config.addSafeClass(serialInputName);
+        }
+
+        return super.resolveClass(serialInput);
+    }
+
+    private void checkSafeClass(String serialInputName) throws InvalidClassException {
         // Enforce SerialKiller's blacklist
         checkBlackList(serialInputName);
 
@@ -78,8 +87,6 @@ public class SerialKiller extends ObjectInputStream {
             LOGGER.error(String.format("Blocked by whitelist. No match found for '%s'", serialInputName));
             throw new InvalidClassException(serialInputName, "Class blocked from deserialization (non-whitelist)");
         }
-
-        return super.resolveClass(serialInput);
     }
 
     private void checkBlackList(final String serialInputName) throws InvalidClassException {
@@ -121,6 +128,7 @@ public class SerialKiller extends ObjectInputStream {
 
         private PatternList blacklist;
         private PatternList whitelist;
+        private Set<String> safeClassesSet = new HashSet<>();
 
         Configuration(final String configPath) {
             try {
@@ -157,6 +165,14 @@ public class SerialKiller extends ObjectInputStream {
 
         boolean isProfiling() {
             return config.getBoolean("mode.profiling", false);
+        }
+
+        void addSafeClass(String className) {
+            safeClassesSet.add(className);
+        }
+
+        boolean isSafeClass(String className) {
+            return safeClassesSet.contains(className);
         }
     }
 
