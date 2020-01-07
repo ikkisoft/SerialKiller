@@ -14,22 +14,19 @@
  */
 package org.nibblesec.tools;
 
-import static java.util.Objects.requireNonNull;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.util.Map;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -75,7 +72,7 @@ public class SerialKiller extends ObjectInputStream {
                     LOGGER.info(String.format("Blacklist match: '%s'", serialInput.getName()));
                 } else {
                     // Blocking mode
-                    LOGGER.error(String.format("Blocked by blacklist '%s'. Match found for '%s'", new Object[] {blackPattern.pattern(), serialInput.getName()}));
+                    LOGGER.error(String.format("Blocked by blacklist '%s'. Match found for '%s'", blackPattern.pattern(), serialInput.getName()));
                     throw new InvalidClassException(serialInput.getName(), "Class blocked from deserialization (blacklist)");
                 }
             }
@@ -112,8 +109,8 @@ public class SerialKiller extends ObjectInputStream {
     static final class Configuration {
         private final XMLConfiguration config;
 
-        private PatternList blacklist;
-        private PatternList whitelist;
+        private List<Pattern> blacklist;
+        private List<Pattern> whitelist;
 
         Configuration(final String configPath) {
             try {
@@ -130,9 +127,13 @@ public class SerialKiller extends ObjectInputStream {
             }
         }
 
-        private void init(final XMLConfiguration config) {
-            blacklist = new PatternList(config.getStringArray("blacklist.regexps.regexp"));
-            whitelist = new PatternList(config.getStringArray("whitelist.regexps.regexp"));
+        private void init(XMLConfiguration config) {
+            blacklist = Stream.of(config.getStringArray("blacklist.regexps.regexp"))
+                .map(Pattern::compile)
+                .collect(Collectors.toList());
+            whitelist = Stream.of(config.getStringArray("whitelist.regexps.regexp"))
+                .map(Pattern::compile)
+                .collect(Collectors.toList());
         }
 
         void reloadIfNeeded() {
@@ -151,47 +152,5 @@ public class SerialKiller extends ObjectInputStream {
         boolean isProfiling() {
             return config.getBoolean("mode.profiling", false);
         }
-    }
-
-    static final class PatternList implements Iterable<Pattern> {
-        private final Pattern[] patterns;
-
-        PatternList(final String... regExps) {
-
-            requireNonNull(regExps, "regExps");
-
-            this.patterns = new Pattern[regExps.length];
-            for (int i = 0; i < regExps.length; i++) {
-                patterns[i] = Pattern.compile(regExps[i]);
-            }
-        }
-
-        @Override
-        public Iterator<Pattern> iterator() {
-            return new Iterator<Pattern>() {
-                int index = 0;
-
-                @Override
-                public boolean hasNext() {
-                    return index < patterns.length;
-                }
-
-                @Override
-                public Pattern next() {
-                    return patterns[index++];
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException("remove");
-                }
-            };
-        }
-
-        @Override
-        public String toString() {
-            return Arrays.toString(patterns);
-        }
-
     }
 }
